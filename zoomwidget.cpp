@@ -124,8 +124,13 @@ void zoomwidget::keyPressEvent(QKeyEvent *event)
 		int key = event->key();
 		if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
 			this->active_pen.setWidth(key - Qt::Key_0);
-			this->update();
+		} else if (key == Qt::Key_R) {
+			this->active_pen.setColor(QColor(255, 0, 0));
+		} else if (key == Qt::Key_G) {
+			this->active_pen.setColor(QColor(0, 255, 0));
 		}
+
+		this->update();
 	}
 }
 
