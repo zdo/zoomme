@@ -32,18 +32,43 @@ void zoomwidget::paintEvent(QPaintEvent *event)
 	QPainter p;
 
 	p.begin(this);
+
 	p.drawPixmap(this->pixmap_pos.x(), this->pixmap_pos.y(),
 		     this->pixmap_size.width(), this->pixmap_size.height(), this->pixmap);
+
+	for (int i = 0; i < this->todraw_rects.size(); ++i) {
+		p.setPen(this->todraw_rects.at(i).pen);
+		p.drawRect(this->pixmap_pos.x() + this->todraw_rects.at(i).rect.x()*scale,
+			   this->pixmap_pos.y() + this->todraw_rects.at(i).rect.y()*scale,
+			   this->todraw_rects.at(i).rect.width()*scale,
+			   this->todraw_rects.at(i).rect.height()*scale);
+	}
+
 	p.end();
 }
 
 void zoomwidget::mousePressEvent(QMouseEvent *event)
 {
 	this->last_mouse_pos = event->pos();
+
+	if (event->modifiers() & Qt::ControlModifier) {
+		draw_point_start = (event->pos() - this->pixmap_pos)/scale;
+	}
 }
 
 void zoomwidget::mouseReleaseEvent(QMouseEvent *event)
 {
+	if (event->modifiers() & Qt::ControlModifier) {
+		draw_point_end = (event->pos() - this->pixmap_pos)/scale;
+
+		rect_data rd;
+		rd.rect = QRect(draw_point_start, draw_point_end);
+		rd.pen.setWidth(4);
+		rd.pen.setColor(QColor(255, 0, 0, 255));
+		this->todraw_rects.append(rd);
+
+		this->update();
+	}
 }
 
 void zoomwidget::mouseMoveEvent(QMouseEvent *event)
@@ -64,13 +89,12 @@ void zoomwidget::wheelEvent(QWheelEvent *event)
 {
 	int sign = event->delta() / abs(event->delta());
 
-	static float pixmap_scale = 1.0f;
-	pixmap_scale += sign * scale_sensivity;
-	if (pixmap_scale < 1.0f) {
-		pixmap_scale = 1.0f;
+	scale += sign * scale_sensivity;
+	if (scale < 1.0f) {
+		scale = 1.0f;
 	}
 
-	this->scale_pixmap_at(pixmap_scale, event->pos());
+	this->scale_pixmap_at(event->pos());
 	this->check_pixmap_pos();
 
 	this->update();
@@ -102,7 +126,7 @@ void zoomwidget::shift_pixmap(const QPoint delta)
 	this->pixmap_pos -= delta * shift_sensivity;
 }
 
-void zoomwidget::scale_pixmap_at(float scale, const QPoint pos)
+void zoomwidget::scale_pixmap_at(const QPoint pos)
 {
 	int old_w = this->pixmap_size.width();
 	int old_h = this->pixmap_size.height();

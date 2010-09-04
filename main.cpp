@@ -8,9 +8,9 @@ int main(int argc, char *argv[])
 
 	zoomwidget w;
 
-	//w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
-	//w.resize(QApplication::desktop()->size());
-	//w.showFullScreen();
+	w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
+	w.resize(QApplication::desktop()->size());
+	w.showFullScreen();
 	w.show();
 
 	return a.exec();
