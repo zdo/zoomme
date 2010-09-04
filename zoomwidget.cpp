@@ -120,8 +120,12 @@ void zoomwidget::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Escape) {
 		QApplication::quit();
-	} else if (event->key() == Qt::Key_Control) {
-		//this->is_dragging = false;
+	} else if (event->modifiers() == Qt::ControlModifier) {
+		int key = event->key();
+		if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
+			this->active_pen.setWidth(key - Qt::Key_0);
+			this->update();
+		}
 	}
 }
 
