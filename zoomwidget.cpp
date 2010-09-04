@@ -44,6 +44,14 @@ void zoomwidget::paintEvent(QPaintEvent *event)
 			   this->todraw_rects.at(i).rect.height()*scale);
 	}
 
+	if (!this->is_dragging) {
+		p.setPen(this->active_pen);
+		p.drawRect(this->pixmap_pos.x() + this->active_rect.x()*scale,
+			   this->pixmap_pos.y() + this->active_rect.y()*scale,
+			   this->active_rect.width()*scale,
+			   this->active_rect.height()*scale);
+	}
+
 	p.end();
 }
 
@@ -52,7 +60,11 @@ void zoomwidget::mousePressEvent(QMouseEvent *event)
 	this->last_mouse_pos = event->pos();
 
 	if (event->modifiers() & Qt::ControlModifier) {
+		this->is_dragging = false;
+
 		draw_point_start = (event->pos() - this->pixmap_pos)/scale;
+		active_rect.setTopLeft(draw_point_start);
+		active_rect.setBottomRight(draw_point_start);
 	}
 }
 
@@ -60,12 +72,14 @@ void zoomwidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	if (event->modifiers() & Qt::ControlModifier) {
 		draw_point_end = (event->pos() - this->pixmap_pos)/scale;
+		active_rect.setBottomRight(draw_point_end);
 
 		rect_data rd;
 		rd.rect = QRect(draw_point_start, draw_point_end);
-		rd.pen.setWidth(4);
-		rd.pen.setColor(QColor(255, 0, 0, 255));
+		rd.pen = active_pen;
 		this->todraw_rects.append(rd);
+
+		this->is_dragging = true;
 
 		this->update();
 	}
@@ -78,11 +92,13 @@ void zoomwidget::mouseMoveEvent(QMouseEvent *event)
 
 		this->shift_pixmap(delta);
 		this->check_pixmap_pos();
-
-		this->update();
+	} else if (event->modifiers() & Qt::ControlModifier) {
+		draw_point_end = (event->pos() - this->pixmap_pos)/scale;
+		active_rect.setBottomRight(draw_point_end);
 	}
 
 	this->last_mouse_pos = event->pos();
+	this->update();
 }
 
 void zoomwidget::wheelEvent(QWheelEvent *event)
@@ -105,14 +121,14 @@ void zoomwidget::keyPressEvent(QKeyEvent *event)
 	if (event->key() == Qt::Key_Escape) {
 		QApplication::quit();
 	} else if (event->key() == Qt::Key_Control) {
-		this->is_dragging = false;
+		//this->is_dragging = false;
 	}
 }
 
 void zoomwidget::keyReleaseEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Control) {
-		this->is_dragging = true;
+		//this->is_dragging = true;
 	}
 }
 

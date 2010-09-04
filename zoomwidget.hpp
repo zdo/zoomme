@@ -57,6 +57,8 @@ private:
 
 	QPoint draw_point_start;
 	QPoint draw_point_end;
+	QPen active_pen;
+	QRect active_rect;
 
 
 	void grab_desktop();
