@@ -22,6 +22,9 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 	_scaleSensivity = 0.1f;
 
 	_drawMode = DRAWMODE_LINE;
+
+	_activePen.setColor(QColor(255, 0, 0));
+	_activePen.setWidth(4);
 }
 
 ZoomWidget::~ZoomWidget()
