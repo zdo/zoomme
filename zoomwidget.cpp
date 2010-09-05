@@ -63,18 +63,16 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
 	_lastMousePos = event->pos();
 
-	if (event->modifiers() & Qt::ControlModifier) {
-		_state = STATE_DRAWING;
+	_state = STATE_DRAWING;
 
-		_startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
-		_activeRect.setTopLeft(_startDrawPoint);
-		_activeRect.setBottomRight(_startDrawPoint);
-	}
+	_startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+	_activeRect.setTopLeft(_startDrawPoint);
+	_activeRect.setBottomRight(_startDrawPoint);
 }
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	if ((_state == STATE_DRAWING) && (event->modifiers() & Qt::ControlModifier)) {
+	if (_state == STATE_DRAWING) {
 		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
 		_activeRect.setBottomRight(_endDrawPoint);
 
@@ -95,7 +93,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
 		shiftPixmap(delta);
 		checkPixmapPos();
-	} else if ((_state == STATE_DRAWING) && (event->modifiers() & Qt::ControlModifier)) {
+	} else if (_state == STATE_DRAWING) {
 		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
 		_activeRect.setBottomRight(_endDrawPoint);
 	}
@@ -141,6 +139,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_activePen.setColor(QColor(255, 0, 255));
 	} else if (key == Qt::Key_Y) {
 		_activePen.setColor(QColor(255, 255, 0));
+	} else if (key == Qt::Key_W) {
+		_activePen.setColor(QColor(255, 255, 255));
 	} else if (key == Qt::Key_Q) {
 		_userRects.clear();
 		_userLines.clear();
