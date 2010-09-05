@@ -58,9 +58,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		p.drawLine(x, y, x+w, y+h);
 	}
 
-	// Draw user arrows.
-
-
 	// Draw active user object.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);

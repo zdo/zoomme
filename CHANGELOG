@@ -1,3 +1,54 @@
+commit f54d9b49426210739185c8154d298ab7eb57b159
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 13:16:49 2010 +0300
+
+    getRealUserObjectPos() implemented to avoid code duplicating
+
+commit aac1321e1c25615201aab1e90831571e4a127633
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 12:50:06 2010 +0300
+
+    Default pen parameters added.
+
+commit cb24180e197f4f1d79dda0123bc016e8bf051ee6
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 12:43:31 2010 +0300
+
+    Line drawing fixed.
+
+commit de60abe1de67a4ff69aa8722e7ecfaa87db2d706
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 12:22:12 2010 +0300
+
+    Usage updated.
+
+commit cbb20f8076aea2986c0389b99d23d482ccfc2a5d
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 12:20:19 2010 +0300
+
+    Lines drawing implemented.
+
+commit a1929d7bad0a656a53617f91e551084fa60ab1a3
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 11:55:39 2010 +0300
+
+    White color added.
+    
+    Control key removed. Now pen color and width manipulating is easier.
+
+commit 32fd7f6d2832ba9e3464b008e9b32924713037e0
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 11:50:43 2010 +0300
+
+    Code refactored to Qt style. State implemented instead of boolean variable.
+    Additional colors added: now there are 6 colors: RGB + CMY.
+
+commit ae786d2a151818e5b18a4d8eaa4a6dbc53ab4f07
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 10:56:03 2010 +0300
+
+    Files with information about ZoomIt added.
+
 commit 66c777555fabb2fb687bc526050bc8a53f97b0cd
 Author: zdo <zdo.str@gmail.com>
 Date:   Sun Sep 5 01:10:16 2010 +0300
