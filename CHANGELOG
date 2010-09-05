@@ -1,0 +1,29 @@
+commit 66c777555fabb2fb687bc526050bc8a53f97b0cd
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 01:10:16 2010 +0300
+
+    Color changing implemented.
+
+commit 0a1a4b21d3f87dff69e11dff13ec34c6580dbcb2
+Author: zdo <zdo.str@gmail.com>
+Date:   Sun Sep 5 01:07:08 2010 +0300
+
+    Active pen width changing implemented (via Ctrl+{0-9})
+
+commit 499f843f5d773f84f5ac63aac80849f91451c347
+Author: Zganjajko Dmitrij <zdo@bugtracker.(none)>
+Date:   Sun Sep 5 01:02:07 2010 +0300
+
+    With pressed mouse button rect drawing implemented.
+
+commit 926cb0b2e5e57bda86dc56f743b8404e775538c6
+Author: Zganjajko Dmitrij <zdo@bugtracker.(none)>
+Date:   Sun Sep 5 00:50:43 2010 +0300
+
+    Fullscreen enabled. Basic rect drawing implemented.
+
+commit 0ce6872c7da0325202af64cbb647d4d58b6bd4aa
+Author: Zganjajko Dmitrij <zdo@bugtracker.(none)>
+Date:   Sun Sep 5 00:17:10 2010 +0300
+
+    0.0.1 - Initial commit. Basic pixmap moving and zooming implemented. Fullscreen mode disabled yet, but can be easy turned on in main.c
