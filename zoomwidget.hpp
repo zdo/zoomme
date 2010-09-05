@@ -20,7 +20,7 @@ enum ZoomWidgetState {
 };
 
 enum ZoomWidgetDrawMode {
-	DRAWMODE_NOTHING,
+	DRAWMODE_ARROW,
 	DRAWMODE_LINE,
 	DRAWMODE_RECT,
 };
@@ -80,6 +80,8 @@ private:
 	void scalePixmapAt(const QPoint pos);
 
 	void checkPixmapPos();
+
+	void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };
 
 #endif // ZOOMWIDGET_HPP

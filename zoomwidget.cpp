@@ -43,27 +43,25 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		     _desktopPixmapSize.width(), _desktopPixmapSize.height(),
 		     _desktopPixmap);
 
-	// Draw user rects.
+	// Draw user objects.
+	int x, y, w, h;
 	for (int i = 0; i < _userRects.size(); ++i) {
 		p.setPen(_userRects.at(i).pen);
-		int x = _desktopPixmapPos.x() + _userRects.at(i).startPoint.x()*_desktopPixmapScale;
-		int y = _desktopPixmapPos.y() + _userRects.at(i).startPoint.y()*_desktopPixmapScale;
-		int w = (_userRects.at(i).endPoint.x() - _userRects.at(i).startPoint.x())*_desktopPixmapScale;
-		int h = (_userRects.at(i).endPoint.y() - _userRects.at(i).startPoint.y())*_desktopPixmapScale;
+		getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
 		p.drawRect(x, y, w, h);
 	}
 
 	// Draw user lines.
 	for (int i = 0; i < _userLines.size(); ++i) {
 		p.setPen(_userLines.at(i).pen);
-		int x = _desktopPixmapPos.x() + _userLines.at(i).startPoint.x()*_desktopPixmapScale;
-		int y = _desktopPixmapPos.y() + _userLines.at(i).startPoint.y()*_desktopPixmapScale;
-		int w = (_userLines.at(i).endPoint.x() - _userLines.at(i).startPoint.x())*_desktopPixmapScale;
-		int h = (_userLines.at(i).endPoint.y() - _userLines.at(i).startPoint.y())*_desktopPixmapScale;
+		getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
 		p.drawLine(x, y, x+w, y+h);
 	}
 
-	// Draw active rect.
+	// Draw user arrows.
+
+
+	// Draw active user object.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);
 
@@ -181,9 +179,6 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
-	if (event->key() == Qt::Key_Control) {
-		//_is_dragging = true;
-	}
 }
 
 void ZoomWidget::grabDesktop()
@@ -231,4 +226,12 @@ void ZoomWidget::checkPixmapPos()
 	} else if ((_desktopPixmapSize.height() + _desktopPixmapPos.y()) < height()) {
 		_desktopPixmapPos.setY(height() - _desktopPixmapSize.height());
 	}
+}
+
+void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h)
+{
+	*x = _desktopPixmapPos.x() + userObj.startPoint.x()*_desktopPixmapScale;
+	*y = _desktopPixmapPos.y() + userObj.startPoint.y()*_desktopPixmapScale;
+	*w = (userObj.endPoint.x() - userObj.startPoint.x())*_desktopPixmapScale;
+	*h = (userObj.endPoint.y() - userObj.startPoint.y())*_desktopPixmapScale;
 }
