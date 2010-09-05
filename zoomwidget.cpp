@@ -43,19 +43,21 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 	// Draw user rects.
 	for (int i = 0; i < _userRects.size(); ++i) {
 		p.setPen(_userRects.at(i).pen);
-		p.drawRect(_desktopPixmapPos.x() + _userRects.at(i).rect.x()*_desktopPixmapScale,
-			   _desktopPixmapPos.y() + _userRects.at(i).rect.y()*_desktopPixmapScale,
-			   _userRects.at(i).rect.width()*_desktopPixmapScale,
-			   _userRects.at(i).rect.height()*_desktopPixmapScale);
+		int x = _desktopPixmapPos.x() + _userRects.at(i).startPoint.x()*_desktopPixmapScale;
+		int y = _desktopPixmapPos.y() + _userRects.at(i).startPoint.y()*_desktopPixmapScale;
+		int w = (_userRects.at(i).endPoint.x() - _userRects.at(i).startPoint.x())*_desktopPixmapScale;
+		int h = (_userRects.at(i).endPoint.y() - _userRects.at(i).startPoint.y())*_desktopPixmapScale;
+		p.drawRect(x, y, w, h);
 	}
 
 	// Draw user lines.
 	for (int i = 0; i < _userLines.size(); ++i) {
 		p.setPen(_userLines.at(i).pen);
-		p.drawLine(_desktopPixmapPos.x() + _userLines.at(i).line.x1()*_desktopPixmapScale,
-			   _desktopPixmapPos.y() + _userLines.at(i).line.y1()*_desktopPixmapScale,
-			   _userLines.at(i).line.x2()*_desktopPixmapScale,
-			   _userLines.at(i).line.y2()*_desktopPixmapScale);
+		int x = _desktopPixmapPos.x() + _userLines.at(i).startPoint.x()*_desktopPixmapScale;
+		int y = _desktopPixmapPos.y() + _userLines.at(i).startPoint.y()*_desktopPixmapScale;
+		int w = (_userLines.at(i).endPoint.x() - _userLines.at(i).startPoint.x())*_desktopPixmapScale;
+		int h = (_userLines.at(i).endPoint.y() - _userLines.at(i).startPoint.y())*_desktopPixmapScale;
+		p.drawLine(x, y, x+w, y+h);
 	}
 
 	// Draw active rect.
@@ -92,16 +94,14 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 	if (_state == STATE_DRAWING) {
 		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
 
+		UserObjectData data;
+		data.pen = _activePen;
+		data.startPoint = _startDrawPoint;
+		data.endPoint = _endDrawPoint;
 		if (_drawMode == DRAWMODE_LINE) {
-			LineData ld;
-			ld.pen = _activePen;
-			ld.line = QLine(_startDrawPoint, _endDrawPoint);
-			_userLines.append(ld);
+			_userLines.append(data);
 		} else if (_drawMode == DRAWMODE_RECT) {
-			RectData rd;
-			rd.pen = _activePen;
-			rd.rect = QRect(_startDrawPoint, _endDrawPoint);
-			_userRects.append(rd);
+			_userRects.append(data);
 		}
 
 		_state = STATE_MOVING;

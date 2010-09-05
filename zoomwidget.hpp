@@ -8,12 +8,9 @@ namespace Ui {
 }
 
 // User data structs.
-struct RectData {
-	QRect rect;
-	QPen pen;
-};
-struct LineData {
-	QLine line;
+struct UserObjectData {
+	QPoint startPoint;
+	QPoint endPoint;
 	QPen pen;
 };
 
@@ -60,8 +57,8 @@ private:
 	float		_desktopPixmapScale;
 
 	// User objects.
-	QVector<RectData> _userRects;
-	QVector<LineData> _userLines;
+	QVector<UserObjectData> _userRects;
+	QVector<UserObjectData> _userLines;
 
 	// Moving properties.
 	int		_shiftMultiplier;
