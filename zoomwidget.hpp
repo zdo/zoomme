@@ -7,23 +7,30 @@ namespace Ui {
 	class zoomwidget;
 }
 
-struct rect_data {
+// User data structs.
+struct RectData {
 	QRect rect;
 	QPen pen;
 };
-
-struct line_data {
+struct LineData {
 	QLine line;
 	QPen pen;
 };
 
-class zoomwidget : public QGLWidget
+enum ZoomWidgetState {
+	STATE_MOVING,
+	STATE_DRAWING,
+};
+
+class ZoomWidget : public QGLWidget
 {
 	Q_OBJECT
 
 public:
-	explicit zoomwidget(QWidget *parent = 0);
-	~zoomwidget();
+	explicit ZoomWidget(QWidget *parent = 0);
+	~ZoomWidget();
+
+	void grabDesktop();
 
 protected:
 	virtual void paintEvent(QPaintEvent *event);
@@ -40,32 +47,36 @@ protected:
 private:
 	Ui::zoomwidget *ui;
 
-	QPixmap pixmap; /* pixmap to draw */
+	// Desktop pixmap properties.
+	QPixmap		_desktopPixmap;
+	QPoint		_desktopPixmapPos;
+	QSize		_desktopPixmapSize;
+	float		_desktopPixmapScale;
 
-	QVector<rect_data> todraw_rects;
-	QVector<line_data> todraw_lines;
+	// User objects.
+	QVector<RectData> _userRects;
+	QVector<LineData> _userLines;
 
-	QPoint pixmap_pos;
-	QSize pixmap_size;
-	float scale;
-
-	bool is_dragging;
-	QPoint last_mouse_pos;
-
-	int shift_sensivity;
-	float scale_sensivity;
-
-	QPoint draw_point_start;
-	QPoint draw_point_end;
-	QPen active_pen;
-	QRect active_rect;
+	// Moving properties.
+	int		_shiftMultiplier;
+	float		_scaleSensivity;
 
 
-	void grab_desktop();
-	void shift_pixmap(const QPoint delta);
-	void scale_pixmap_at(const QPoint pos);
+	ZoomWidgetState	_state;
+	QPoint		_lastMousePos;
 
-	void check_pixmap_pos();
+
+	// Drawing properties.
+	QPoint	_startDrawPoint;
+	QPoint	_endDrawPoint;
+	QPen	_activePen;
+	QRect	_activeRect;
+
+
+	void shiftPixmap(const QPoint delta);
+	void scalePixmapAt(const QPoint pos);
+
+	void checkPixmapPos();
 };
 
 #endif // ZOOMWIDGET_HPP

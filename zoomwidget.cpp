@@ -5,185 +5,201 @@
 #include <QDesktopWidget>
 #include <QMouseEvent>
 
-zoomwidget::zoomwidget(QWidget *parent) :
+ZoomWidget::ZoomWidget(QWidget *parent) :
 		QGLWidget(parent),
 		ui(new Ui::zoomwidget)
 {
 	ui->setupUi(this);
 	setMouseTracking(true);
 
-	this->grab_desktop();
+	_state = STATE_MOVING;
 
-	this->is_dragging = true;
+	_desktopPixmapPos = QPoint(0, 0);
+	_desktopPixmapSize = QApplication::desktop()->size();
+	_desktopPixmapScale = 1.0f;
 
-	this->pixmap_pos = QPoint(0, 0);
-	this->pixmap_size = this->pixmap.size();
-	shift_sensivity = 2;
-	scale_sensivity = 0.1f;
+	_shiftMultiplier = 2;
+	_scaleSensivity = 0.1f;
 }
 
-zoomwidget::~zoomwidget()
+ZoomWidget::~ZoomWidget()
 {
 	delete ui;
 }
 
-void zoomwidget::paintEvent(QPaintEvent *event)
+void ZoomWidget::paintEvent(QPaintEvent *event)
 {
 	QPainter p;
 
 	p.begin(this);
 
-	p.drawPixmap(this->pixmap_pos.x(), this->pixmap_pos.y(),
-		     this->pixmap_size.width(), this->pixmap_size.height(), this->pixmap);
+	// Draw desktop pixmap.
+	p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
+		     _desktopPixmapSize.width(), _desktopPixmapSize.height(),
+		     _desktopPixmap);
 
-	for (int i = 0; i < this->todraw_rects.size(); ++i) {
-		p.setPen(this->todraw_rects.at(i).pen);
-		p.drawRect(this->pixmap_pos.x() + this->todraw_rects.at(i).rect.x()*scale,
-			   this->pixmap_pos.y() + this->todraw_rects.at(i).rect.y()*scale,
-			   this->todraw_rects.at(i).rect.width()*scale,
-			   this->todraw_rects.at(i).rect.height()*scale);
+	// Draw user rects.
+	for (int i = 0; i < _userRects.size(); ++i) {
+		p.setPen(_userRects.at(i).pen);
+		p.drawRect(_desktopPixmapPos.x() + _userRects.at(i).rect.x()*_desktopPixmapScale,
+			   _desktopPixmapPos.y() + _userRects.at(i).rect.y()*_desktopPixmapScale,
+			   _userRects.at(i).rect.width()*_desktopPixmapScale,
+			   _userRects.at(i).rect.height()*_desktopPixmapScale);
 	}
 
-	if (!this->is_dragging) {
-		p.setPen(this->active_pen);
-		p.drawRect(this->pixmap_pos.x() + this->active_rect.x()*scale,
-			   this->pixmap_pos.y() + this->active_rect.y()*scale,
-			   this->active_rect.width()*scale,
-			   this->active_rect.height()*scale);
+	// Draw active rect.
+	if (_state == STATE_DRAWING) {
+		p.setPen(_activePen);
+		p.drawRect(_desktopPixmapPos.x() + _activeRect.x()*_desktopPixmapScale,
+			   _desktopPixmapPos.y() + _activeRect.y()*_desktopPixmapScale,
+			   _activeRect.width()*_desktopPixmapScale,
+			   _activeRect.height()*_desktopPixmapScale);
 	}
 
 	p.end();
 }
 
-void zoomwidget::mousePressEvent(QMouseEvent *event)
+void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
-	this->last_mouse_pos = event->pos();
+	_lastMousePos = event->pos();
 
 	if (event->modifiers() & Qt::ControlModifier) {
-		this->is_dragging = false;
+		_state = STATE_DRAWING;
 
-		draw_point_start = (event->pos() - this->pixmap_pos)/scale;
-		active_rect.setTopLeft(draw_point_start);
-		active_rect.setBottomRight(draw_point_start);
+		_startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+		_activeRect.setTopLeft(_startDrawPoint);
+		_activeRect.setBottomRight(_startDrawPoint);
 	}
 }
 
-void zoomwidget::mouseReleaseEvent(QMouseEvent *event)
+void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	if (event->modifiers() & Qt::ControlModifier) {
-		draw_point_end = (event->pos() - this->pixmap_pos)/scale;
-		active_rect.setBottomRight(draw_point_end);
+	if ((_state == STATE_DRAWING) && (event->modifiers() & Qt::ControlModifier)) {
+		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+		_activeRect.setBottomRight(_endDrawPoint);
 
-		rect_data rd;
-		rd.rect = QRect(draw_point_start, draw_point_end);
-		rd.pen = active_pen;
-		this->todraw_rects.append(rd);
+		RectData rd;
+		rd.rect = QRect(_startDrawPoint, _endDrawPoint);
+		rd.pen = _activePen;
+		_userRects.append(rd);
 
-		this->is_dragging = true;
-
-		this->update();
+		_state = STATE_MOVING;
+		update();
 	}
 }
 
-void zoomwidget::mouseMoveEvent(QMouseEvent *event)
+void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	if (this->is_dragging) {
-		QPoint delta = event->pos() - this->last_mouse_pos;
+	if (_state == STATE_MOVING) {
+		QPoint delta = event->pos() - _lastMousePos;
 
-		this->shift_pixmap(delta);
-		this->check_pixmap_pos();
-	} else if (event->modifiers() & Qt::ControlModifier) {
-		draw_point_end = (event->pos() - this->pixmap_pos)/scale;
-		active_rect.setBottomRight(draw_point_end);
+		shiftPixmap(delta);
+		checkPixmapPos();
+	} else if ((_state == STATE_DRAWING) && (event->modifiers() & Qt::ControlModifier)) {
+		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+		_activeRect.setBottomRight(_endDrawPoint);
 	}
 
-	this->last_mouse_pos = event->pos();
-	this->update();
+	_lastMousePos = event->pos();
+	update();
 }
 
-void zoomwidget::wheelEvent(QWheelEvent *event)
+void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
-	int sign = event->delta() / abs(event->delta());
+	if (_state == STATE_MOVING) {
+		int sign = event->delta() / abs(event->delta());
 
-	scale += sign * scale_sensivity;
-	if (scale < 1.0f) {
-		scale = 1.0f;
-	}
-
-	this->scale_pixmap_at(event->pos());
-	this->check_pixmap_pos();
-
-	this->update();
-}
-
-void zoomwidget::keyPressEvent(QKeyEvent *event)
-{
-	if (event->key() == Qt::Key_Escape) {
-		QApplication::quit();
-	} else if (event->modifiers() == Qt::ControlModifier) {
-		int key = event->key();
-		if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
-			this->active_pen.setWidth(key - Qt::Key_0);
-		} else if (key == Qt::Key_R) {
-			this->active_pen.setColor(QColor(255, 0, 0));
-		} else if (key == Qt::Key_G) {
-			this->active_pen.setColor(QColor(0, 255, 0));
+		_desktopPixmapScale += sign * _scaleSensivity;
+		if (_desktopPixmapScale < 1.0f) {
+			_desktopPixmapScale = 1.0f;
 		}
 
-		this->update();
+		scalePixmapAt(event->pos());
+		checkPixmapPos();
+
+		update();
 	}
 }
 
-void zoomwidget::keyReleaseEvent(QKeyEvent *event)
+void ZoomWidget::keyPressEvent(QKeyEvent *event)
+{
+	int key = event->key();
+
+	if (key == Qt::Key_Escape) {
+		QApplication::quit();
+	} else if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
+		_activePen.setWidth(key - Qt::Key_0);
+	} else if (key == Qt::Key_R) {
+		_activePen.setColor(QColor(255, 0, 0));
+	} else if (key == Qt::Key_G) {
+		_activePen.setColor(QColor(0, 255, 0));
+	} else if (key == Qt::Key_B) {
+		_activePen.setColor(QColor(0, 0, 255));
+	} else if (key == Qt::Key_C) {
+		_activePen.setColor(QColor(0, 255, 255));
+	} else if (key == Qt::Key_M) {
+		_activePen.setColor(QColor(255, 0, 255));
+	} else if (key == Qt::Key_Y) {
+		_activePen.setColor(QColor(255, 255, 0));
+	} else if (key == Qt::Key_Q) {
+		_userRects.clear();
+		_userLines.clear();
+		_state = STATE_MOVING;
+	}
+
+	update();
+}
+
+void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Control) {
-		//this->is_dragging = true;
+		//_is_dragging = true;
 	}
 }
 
-void zoomwidget::grab_desktop()
+void ZoomWidget::grabDesktop()
 {
-	this->pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
+	_desktopPixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
 }
 
-void zoomwidget::shift_pixmap(const QPoint delta)
+void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-	this->pixmap_pos -= delta * shift_sensivity;
+	_desktopPixmapPos -= delta * _shiftMultiplier;
 }
 
-void zoomwidget::scale_pixmap_at(const QPoint pos)
+void ZoomWidget::scalePixmapAt(const QPoint pos)
 {
-	int old_w = this->pixmap_size.width();
-	int old_h = this->pixmap_size.height();
+	int old_w = _desktopPixmapSize.width();
+	int old_h = _desktopPixmapSize.height();
 
-	int new_w = this->pixmap.width() * scale;
-	int new_h = this->pixmap.height() * scale;
-	this->pixmap_size = QSize(new_w, new_h);
+	int new_w = _desktopPixmap.width() * _desktopPixmapScale;
+	int new_h = _desktopPixmap.height() * _desktopPixmapScale;
+	_desktopPixmapSize = QSize(new_w, new_h);
 
 	int dw = new_w - old_w;
 	int dh = new_h - old_h;
 
-	int cur_x = pos.x() + abs(this->pixmap_pos.x());
-	int cur_y = pos.y() + abs(this->pixmap_pos.y());
+	int cur_x = pos.x() + abs(_desktopPixmapPos.x());
+	int cur_y = pos.y() + abs(_desktopPixmapPos.y());
 
 	float cur_px = -((float)cur_x / old_w);
 	float cur_py = -((float)cur_y / old_h);
 
-	this->pixmap_pos.setX(this->pixmap_pos.x() + dw*cur_px);
-	this->pixmap_pos.setY(this->pixmap_pos.y() + dh*cur_py);
+	_desktopPixmapPos.setX(_desktopPixmapPos.x() + dw*cur_px);
+	_desktopPixmapPos.setY(_desktopPixmapPos.y() + dh*cur_py);
 }
 
-void zoomwidget::check_pixmap_pos()
+void ZoomWidget::checkPixmapPos()
 {
-	if (pixmap_pos.x() > 0) {
-		pixmap_pos.setX(0);
-	} else if ((pixmap_size.width() + pixmap_pos.x()) < this->width()) {
-		pixmap_pos.setX(this->width() - pixmap_size.width());
+	if (_desktopPixmapPos.x() > 0) {
+		_desktopPixmapPos.setX(0);
+	} else if ((_desktopPixmapSize.width() + _desktopPixmapPos.x()) < width()) {
+		_desktopPixmapPos.setX(width() - _desktopPixmapSize.width());
 	}
 
-	if (pixmap_pos.y() > 0) {
-		pixmap_pos.setY(0);
-	} else if ((pixmap_size.height() + pixmap_pos.y()) < this->height()) {
-		pixmap_pos.setY(this->height() - pixmap_size.height());
+	if (_desktopPixmapPos.y() > 0) {
+		_desktopPixmapPos.setY(0);
+	} else if ((_desktopPixmapSize.height() + _desktopPixmapPos.y()) < height()) {
+		_desktopPixmapPos.setY(height() - _desktopPixmapSize.height());
 	}
 }
