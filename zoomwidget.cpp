@@ -20,6 +20,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 
 	_shiftMultiplier = 2;
 	_scaleSensivity = 0.1f;
+
+	_drawMode = DRAWMODE_LINE;
 }
 
 ZoomWidget::~ZoomWidget()
@@ -47,13 +49,29 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 			   _userRects.at(i).rect.height()*_desktopPixmapScale);
 	}
 
+	// Draw user lines.
+	for (int i = 0; i < _userLines.size(); ++i) {
+		p.setPen(_userLines.at(i).pen);
+		p.drawLine(_desktopPixmapPos.x() + _userLines.at(i).line.x1()*_desktopPixmapScale,
+			   _desktopPixmapPos.y() + _userLines.at(i).line.y1()*_desktopPixmapScale,
+			   _userLines.at(i).line.x2()*_desktopPixmapScale,
+			   _userLines.at(i).line.y2()*_desktopPixmapScale);
+	}
+
 	// Draw active rect.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);
-		p.drawRect(_desktopPixmapPos.x() + _activeRect.x()*_desktopPixmapScale,
-			   _desktopPixmapPos.y() + _activeRect.y()*_desktopPixmapScale,
-			   _activeRect.width()*_desktopPixmapScale,
-			   _activeRect.height()*_desktopPixmapScale);
+
+		int x = _desktopPixmapPos.x() + _startDrawPoint.x()*_desktopPixmapScale;
+		int y = _desktopPixmapPos.y() + _startDrawPoint.y()*_desktopPixmapScale;
+		int width = (_endDrawPoint.x() - _startDrawPoint.x())*_desktopPixmapScale;
+		int height = (_endDrawPoint.y() - _startDrawPoint.y())*_desktopPixmapScale;
+
+		if (_drawMode == DRAWMODE_RECT) {
+			p.drawRect(x, y, width, height);
+		} else if (_drawMode == DRAWMODE_LINE) {
+			p.drawLine(x, y, width + x, height + y);
+		}
 	}
 
 	p.end();
@@ -66,20 +84,25 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 	_state = STATE_DRAWING;
 
 	_startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
-	_activeRect.setTopLeft(_startDrawPoint);
-	_activeRect.setBottomRight(_startDrawPoint);
+	_endDrawPoint = _startDrawPoint;
 }
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	if (_state == STATE_DRAWING) {
 		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
-		_activeRect.setBottomRight(_endDrawPoint);
 
-		RectData rd;
-		rd.rect = QRect(_startDrawPoint, _endDrawPoint);
-		rd.pen = _activePen;
-		_userRects.append(rd);
+		if (_drawMode == DRAWMODE_LINE) {
+			LineData ld;
+			ld.pen = _activePen;
+			ld.line = QLine(_startDrawPoint, _endDrawPoint);
+			_userLines.append(ld);
+		} else if (_drawMode == DRAWMODE_RECT) {
+			RectData rd;
+			rd.pen = _activePen;
+			rd.rect = QRect(_startDrawPoint, _endDrawPoint);
+			_userRects.append(rd);
+		}
 
 		_state = STATE_MOVING;
 		update();
@@ -95,7 +118,6 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 		checkPixmapPos();
 	} else if (_state == STATE_DRAWING) {
 		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
-		_activeRect.setBottomRight(_endDrawPoint);
 	}
 
 	_lastMousePos = event->pos();
@@ -145,6 +167,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_userRects.clear();
 		_userLines.clear();
 		_state = STATE_MOVING;
+	} else if (key == Qt::Key_Z) {
+		_drawMode = DRAWMODE_LINE;
+	} else if (key == Qt::Key_X) {
+		_drawMode = DRAWMODE_RECT;
 	}
 
 	update();

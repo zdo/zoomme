@@ -22,6 +22,12 @@ enum ZoomWidgetState {
 	STATE_DRAWING,
 };
 
+enum ZoomWidgetDrawMode {
+	DRAWMODE_NOTHING,
+	DRAWMODE_LINE,
+	DRAWMODE_RECT,
+};
+
 class ZoomWidget : public QGLWidget
 {
 	Q_OBJECT
@@ -67,10 +73,10 @@ private:
 
 
 	// Drawing properties.
+	ZoomWidgetDrawMode	_drawMode;
 	QPoint	_startDrawPoint;
 	QPoint	_endDrawPoint;
 	QPen	_activePen;
-	QRect	_activeRect;
 
 
 	void shiftPixmap(const QPoint delta);
